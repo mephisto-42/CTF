@@ -164,7 +164,6 @@ if (!isset($argv[1])){
 }
 
 $cible = new host($argv[1]);
-$cible->dirb();
 $cible->all();
 
 ?>

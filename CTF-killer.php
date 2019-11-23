@@ -9,6 +9,8 @@ class host{
 	const	WHOIS		= "whois ";
 	const	SCAN		= "nmap -sC -p ";
 	const	NMAP		= "nmap -sS -sV -sC -A -T4 -O --osscan-guess -v ";
+	const	EOL		= "
+";
 
 	// SCRIPT
 	private $_pwd;
@@ -110,6 +112,13 @@ class host{
 		}
 	}
 
+	private function dirb_resum(){
+		$directory =	shell_exec("cat ".$this->_pwd."dirb.txt | grep 'directory'| awk '{print $4}'");
+		$files	   =	shell_exec("cat ".$this->_pwd."dirb.txt | grep 'CODE:200' | awk '{print $2}'");
+		$resum	   =	$directory.PHP_EOL.$files.PHP_EOL;
+		return ($resum);
+	}
+
 	public function nikto(){
 		$command = "nikto -url ".$this->_url." -output ".$this->_pwd."nikto.txt";
 		if ($this->_http != ""){
@@ -118,8 +127,37 @@ class host{
 	}
 
 	public function nmap(){
-		$command = self::NMAP.$this->_ip." -oN ".$this->_pwd."nmap.txt";
+		$command = self::NMAP.$this->_ip." -oN ".$this->_pwd."nmap.txt; sleep 10";
 		$this->cmd($command);
+	}
+
+	private function nmap_version($services){
+		$explode = explode(SELF::EOL, $services);
+		$return = "";
+		foreach ($explode as $service){
+			if ($service != "" AND $service != "access-denied"){
+				$tmp	 = str_replace("(" , " ", $service);
+				$tmp2	 = str_replace(")" , " ", $tmp);
+				$version = str_replace("  ", " ", $tmp2);
+				$exploit = shell_exec("searchsploit '".$version."'");
+				$test	 = shell_exec("searchsploit '".$version."' | wc -l");
+				if ($test > 3 AND $test < 50){
+					$return .= $exploit;
+				}
+			}
+		}
+		return ($return);
+	}
+
+	private function nmap_resum(){
+		$os	 = shell_exec("cat ".$this->_pwd."nmap.txt | grep 'OS CPE\|OS details'");
+		$port	 = shell_exec("cat ".$this->_pwd."nmap.txt | grep '/tcp \|| '");
+		$service = shell_exec("cat ".$this->_pwd."nmap.txt | grep '/tcp ' | awk '{print $4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15}'");
+		$exploit = $this->nmap_version($service);
+		file_put_contents($this->_pwd."exploit.txt",	$exploit);
+		file_put_contents($this->_pwd."port.txt",	$port);
+		$resum = $os.PHP_EOL.$port.PHP_EOL.$exploit.PHP_EOL;
+		return ($resum);
 	}
 
 	public function ftp(){
@@ -139,11 +177,6 @@ class host{
 		$nmap		= $this->launch("Nmap",		"en cours");
 		$pwd		= $this->_pwd;
 
-		$resum	= $ping.PHP_EOL;
-		$resum .= $nslookup.PHP_EOL;
-		$resum .= $whois.PHP_EOL;
-
-		file_put_contents($pwd."resum.txt", $resum);
 		file_put_contents($pwd.$this->_ip, "");
 		if ($this->_domaine != ""){
 			file_put_contents($pwd.$this->_domaine, "");
@@ -155,6 +188,27 @@ class host{
 		if ($whois != ""){
 			file_put_contents($pwd."whois.txt", $whois);
 		}
+
+		echo "Attente des résultats ...".PHP_EOL;
+		sleep(5);
+		$test = 0;
+		while ($test < 3){
+			$test = shell_exec("cat ".$this->_pwd."nmap.txt | wc -l");
+		}
+		sleep(5);
+
+		echo "Traitement des résultats ...".PHP_EOL;
+		$resum	= $ping.PHP_EOL;
+		$resum .= $nslookup.PHP_EOL;
+		$resum .= $whois.PHP_EOL;
+		$resum .= $this->dirb_resum();
+		$resum .= shell_exec("cat ".$this->_pwd."nikto.txt");
+		$resum .= $this->nmap_resum();
+		file_put_contents($pwd."resum.txt", $resum);
+		sleep(1);
+		echo "FIN".PHP_EOL;
+
+		$this->cmd("less ".$pwd."resum.txt");
 	}
 }
 

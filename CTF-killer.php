@@ -2,11 +2,11 @@
 
 class host{
 
-	//const	END_SHELL	= "; exec sh";
-	const	END_SHELL	= "; sleep 5";
-	const	PING		= "ping -c 6 ";
+	const	EXPLOIT_LIMIT	= "500";
+	const	END_SHELL	= "; sleep 2";
 	const	NSLOOKUP	= "nslookup ";
 	const	WHOIS		= "whois ";
+	const	PING		= "ping -c 6 ";
 	const	SCAN		= "nmap -sC -p ";
 	const	NMAP		= "nmap -sS -sV -sC -A -T4 -O --osscan-guess -v ";
 	const	EOL		= "
@@ -141,7 +141,7 @@ class host{
 				$version = str_replace("  ", " ", $tmp2);
 				$exploit = shell_exec("searchsploit '".$version."'");
 				$test	 = shell_exec("searchsploit '".$version."' | wc -l");
-				if ($test > 3 AND $test < 50){
+				if ($test > 3 AND $test < SELF::EXPLOIT_LIMIT){
 					$return .= $exploit;
 				}
 			}

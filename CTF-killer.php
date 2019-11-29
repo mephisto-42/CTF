@@ -108,8 +108,8 @@ class host{
 
 	public function dirb(){
 		$command = "dirb ".$this->_url." ".SELF::DIRB_DICO." -o ".$this->_pwd."dirb.txt ";
-		if ($this->_http != ""){
-			$this->cmd($command);
+		if ($this->_http != 0){
+			return ($this->cmd($command));
 		}
 	}
 
@@ -122,8 +122,8 @@ class host{
 
 	public function nikto(){
 		$command = "nikto -url ".$this->_url." -output ".$this->_pwd."nikto.txt";
-		if ($this->_http != ""){
-			$this->cmd($command);
+		if ($this->_http != 0){
+			return ($this->cmd($command));
 		}
 	}
 
@@ -162,7 +162,7 @@ class host{
 	}
 
 	public function ftp(){
-		if ($this->_ftp != ""){
+		if ($this->_ftp != 0){
 			$this->cmd("wget -r ftp://Anonymous:@$this->_ip -P ftp");
 		}
 	}

@@ -8,7 +8,8 @@ class host{
 	const	WHOIS		= "whois ";
 	const	PING		= "ping -c 6 ";
 	const	SCAN		= "nmap -sC -p ";
-	const	NMAP		= "nmap -sS -sV -sC -A -T4 -O --osscan-guess -v ";
+	const	NMAP		= "nmap -sS -sV -sC -A -T4 -O --osscan-guess -v -p- ";
+	const	DIRB_DICO	= "/usr/share/dirb/wordlists/big.txt";
 	const	EOL		= "
 ";
 
@@ -106,7 +107,7 @@ class host{
 	}
 
 	public function dirb(){
-		$command = "dirb ".$this->_url." -o ".$this->_pwd."dirb.txt ";
+		$command = "dirb ".$this->_url." ".SELF::DIRB_DICO." -o ".$this->_pwd."dirb.txt ";
 		if ($this->_http != ""){
 			$this->cmd($command);
 		}
